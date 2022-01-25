@@ -2,6 +2,7 @@ library multiselect;
 
 import 'package:flutter/material.dart';
 import 'package:states_rebuilder/states_rebuilder.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class _TheState {}
 
@@ -18,7 +19,6 @@ class _SelectRow extends StatelessWidget {
       required this.selected,
       required this.text})
       : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -67,12 +67,6 @@ class DropDownMultiSelect extends StatefulWidget {
   /// a function to build custom menu items
   final Widget Function(String option)? menuItembuilder;
 
-  /// a function to validate
-  final String Function(String? selectedOptions)? validator;
-
-  /// defines whether the widget is read-only
-  final bool readOnly;
-
   const DropDownMultiSelect({
     Key? key,
     required this.options,
@@ -84,10 +78,7 @@ class DropDownMultiSelect extends StatefulWidget {
     this.isDense = false,
     this.enabled = true,
     this.decoration,
-    this.validator,
-    this.readOnly = false,
   }) : super(key: key);
-
   @override
   _DropDownMultiSelectState createState() => _DropDownMultiSelectState();
 }
@@ -107,13 +98,12 @@ class _DropDownMultiSelectState extends State<DropDownMultiSelect> {
                           EdgeInsets.symmetric(vertical: 15, horizontal: 10),
                       child: Text(widget.selectedValues.length > 0
                           ? widget.selectedValues
-                              .reduce((a, b) => a + ' , ' + b)
+                              .reduce((a, b) => a.tr() + ' , ' + b.tr())
                           : widget.whenEmpty ?? '')),
                   alignment: Alignment.centerLeft)),
           Align(
             alignment: Alignment.centerLeft,
             child: DropdownButtonFormField<String>(
-              validator: widget.validator != null ? widget.validator : null,
               decoration: widget.decoration != null
                   ? widget.decoration
                   : InputDecoration(
@@ -126,9 +116,7 @@ class _DropDownMultiSelectState extends State<DropDownMultiSelect> {
                     ),
               isDense: true,
               onChanged: widget.enabled ? (x) {} : null,
-              value: widget.selectedValues.length > 0
-                  ? widget.selectedValues[0]
-                  : null,
+              value: null,
               selectedItemBuilder: (context) {
                 return widget.options
                     .map((e) => DropdownMenuItem(
@@ -143,7 +131,7 @@ class _DropDownMultiSelectState extends State<DropDownMultiSelect> {
                               ? widget.menuItembuilder!(x)
                               : _SelectRow(
                                   selected: widget.selectedValues.contains(x),
-                                  text: x,
+                                  text: x.tr(),
                                   onChange: (isSelected) {
                                     if (isSelected) {
                                       var ns = widget.selectedValues;
@@ -158,19 +146,17 @@ class _DropDownMultiSelectState extends State<DropDownMultiSelect> {
                                 );
                         }),
                         value: x,
-                        onTap: !widget.readOnly
-                            ? () {
-                                if (widget.selectedValues.contains(x)) {
-                                  var ns = widget.selectedValues;
-                                  ns.remove(x);
-                                  widget.onChanged(ns);
-                                } else {
-                                  var ns = widget.selectedValues;
-                                  ns.add(x);
-                                  widget.onChanged(ns);
-                                }
-                              }
-                            : null,
+                        onTap: () {
+                          if (widget.selectedValues.contains(x)) {
+                            var ns = widget.selectedValues;
+                            ns.remove(x);
+                            widget.onChanged(ns);
+                          } else {
+                            var ns = widget.selectedValues;
+                            ns.add(x);
+                            widget.onChanged(ns);
+                          }
+                        },
                       ))
                   .toList(),
             ),
